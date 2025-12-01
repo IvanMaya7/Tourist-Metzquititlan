@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  getGastronomy,
-  createGastronomy,
-  updateGastronomy,
-  deleteGastronomy
+import { getGastronomy, createGastronomy, updateGastronomy, deleteGastronomy
 } from "../api/gastronomy";
 
 function Gastronomy() {
@@ -22,8 +18,6 @@ function Gastronomy() {
   const [editId, setEditId] = useState(null);
   const [searchName, setSearchName] = useState("");
   const [filteredItems, setFilteredItems] = useState([]);
-
-
 
   const loadData = async () => {
     try {
@@ -77,8 +71,7 @@ function Gastronomy() {
   );
 
   setFilteredItems(filtered);
-};
-
+  };
 
   const handleDelete = async (id) => {
   try {
@@ -92,27 +85,50 @@ function Gastronomy() {
 };
 
   const handleSubmit = async (e) => { 
-    e.preventDefault(); const payload = { 
-        name: formData.name, 
-        description: formData.description, 
-        ingredients: formData.ingredients.split("\n").filter(Boolean), 
-        images: formData.images.split("\n").filter(Boolean), 
-        recommendedPlaces: formData.recommendedPlaces.split("\n").filter(Boolean) }; 
-    try { // Si estamos editando 
-  if (editId) { 
-        await updateGastronomy(editId, payload); 
-        alert("Platillo actualizado"); 
+  e.preventDefault();
+
+  const formDataToSend = new FormData();
+
+  // Campos normales
+  formDataToSend.append("name", formData.name);
+  formDataToSend.append("description", formData.description);
+
+  // Convertimos los textos en arreglos reales
+  formDataToSend.append(
+    "ingredients",
+    JSON.stringify(formData.ingredients.split("\n").filter(Boolean))
+  );
+
+  formDataToSend.append(
+    "recommendedPlaces",
+    JSON.stringify(formData.recommendedPlaces.split("\n").filter(Boolean))
+  );
+
+  // IMÁGENES: si no hay imágenes, no enviamos nada
+  if (formData.images && formData.images.length > 0) {
+    formData.images.forEach((file) => {
+      formDataToSend.append("images", file);
+    });
+  }
+
+  try {
+    if (editId) {
+      await updateGastronomy(editId, formDataToSend);
+      alert("Platillo actualizado");
+    } else {
+      await createGastronomy(formDataToSend);
+      alert("Platillo guardado");
     }
-     else { 
-        await createGastronomy(payload); 
-        alert("Platillo guardado");
-     } 
-     cancelEdit(); 
-     loadData(); 
-    } catch (error) { 
-        console.error("Error guardando:", error); alert("Error, revisa la consola"); 
-    } 
+
+    cancelEdit();
+    loadData();
+
+  } catch (error) {
+    console.error("Error guardando:", error);
+    alert("Error, revisa la consola");
+  }
 };
+
 
   return (
     <div style={{ padding: 20 }}>
