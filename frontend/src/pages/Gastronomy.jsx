@@ -1,24 +1,42 @@
 import { useEffect, useState } from "react";
+<<<<<<< HEAD
 import { getGastronomy, createGastronomy, updateGastronomy, deleteGastronomy
+=======
+import axios from "axios";
+import {
+  getGastronomy,
+  createGastronomy,
+  updateGastronomy,
+  deleteGastronomy
+>>>>>>> main
 } from "../api/gastronomy";
+
+// IMPORTANTE: Importar el CSS
+import "../styles/Gastronomy.css"; 
 
 function Gastronomy() {
   const [items, setItems] = useState([]);
+  const [filesToUpload, setFilesToUpload] = useState([]);
 
-  // Form principal
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     ingredients: "",
-    images: "",
+    images: [],
     recommendedPlaces: ""
   });
 
-  // ID del que estamos editando (null si es uno nuevo)
   const [editId, setEditId] = useState(null);
   const [searchName, setSearchName] = useState("");
   const [filteredItems, setFilteredItems] = useState([]);
 
+<<<<<<< HEAD
+=======
+  // TUS CREDENCIALES DE CLOUDINARY (Recuerda poner las tuyas)
+  const CLOUDINARY_CLOUD_NAME = "TU_CLOUD_NAME"; 
+  const CLOUDINARY_UPLOAD_PRESET = "TU_PRESET"; 
+
+>>>>>>> main
   const loadData = async () => {
     try {
       const res = await getGastronomy();
@@ -34,36 +52,57 @@ function Gastronomy() {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // PREPARAR formulario para editar
+  const handleFileChange = (e) => {
+    setFilesToUpload(Array.from(e.target.files));
+  };
+
+  const uploadToCloudinary = async (file) => {
+    const data = new FormData();
+    data.append("file", file);
+    data.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    data.append("cloud_name", CLOUDINARY_CLOUD_NAME);
+
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        data
+      );
+      return response.data.secure_url;
+    } catch (error) {
+      console.error("Error subiendo imagen:", error);
+      throw error;
+    }
+  };
+
   const startEdit = (item) => {
     setEditId(item._id);
+    setFilesToUpload([]);
     setFormData({
       name: item.name,
       description: item.description,
       ingredients: item.ingredients.join("\n"),
-      images: item.images.join("\n"),
-      recommendedPlaces: item.recommendedPlaces.join("\n")
+      recommendedPlaces: item.recommendedPlaces.join("\n"),
+      images: item.images || []
     });
   };
 
   const cancelEdit = () => {
     setEditId(null);
+    setFilesToUpload([]);
     setFormData({
       name: "",
       description: "",
       ingredients: "",
-      images: "",
+      images: [],
       recommendedPlaces: ""
     });
   };
 
   const handleSearchByName = (value) => {
+<<<<<<< HEAD
   setSearchName(value);
 
   const filtered = items.filter(item =>
@@ -128,135 +167,194 @@ function Gastronomy() {
     alert("Error, revisa la consola");
   }
 };
+=======
+    setSearchName(value);
+    const filtered = items.filter((item) =>
+      item.name.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredItems(filtered);
+  };
+
+  const handleDelete = async (id) => {
+    if(!window.confirm("¿Estás seguro de eliminar este platillo?")) return;
+    try {
+      await deleteGastronomy(id);
+      loadData();
+    } catch (error) {
+      console.error("Error eliminando:", error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      let imageUrls = formData.images;
+      if (filesToUpload.length > 0) {
+        const uploadPromises = filesToUpload.map((file) => uploadToCloudinary(file));
+        const newUrls = await Promise.all(uploadPromises);
+        imageUrls = [...imageUrls, ...newUrls];
+      }
+
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        ingredients: formData.ingredients.split("\n").filter(Boolean),
+        images: imageUrls,
+        recommendedPlaces: formData.recommendedPlaces.split("\n").filter(Boolean),
+      };
+
+      if (editId) {
+        await updateGastronomy(editId, payload);
+      } else {
+        await createGastronomy(payload);
+      }
+      cancelEdit();
+      loadData();
+    } catch (error) {
+      console.error("Error guardando:", error);
+      alert("Error al guardar. Revisa la consola.");
+    }
+  };
+>>>>>>> main
 
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Gastronomía</h1>
+    <div className="gastronomy-container">
+      <h1 className="title-main">Gestión de Gastronomía</h1>
 
-      {/* FORM */}
-      <form onSubmit={handleSubmit} style={{ marginBottom: 30 }}>
-        <h2>{editId ? "Editar Platillo" : "Agregar Platillo"}</h2>
+      {/* --- FORMULARIO --- */}
+      <form onSubmit={handleSubmit} className="gastronomy-form">
+        <h2>{editId ? "Editar Platillo" : "Agregar Nuevo Platillo"}</h2>
 
-        <input
-          type="text"
-          name="name"
-          placeholder="Nombre"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
+        <div className="form-group">
+          <input
+            className="input-field"
+            type="text"
+            name="name"
+            placeholder="Nombre del platillo"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-        <textarea
-          name="description"
-          placeholder="Descripción"
-          value={formData.description}
-          onChange={handleChange}
-        />
-        <br /><br />
+        <div className="form-group">
+          <textarea
+            className="textarea-field"
+            name="description"
+            placeholder="Descripción detallada..."
+            value={formData.description}
+            onChange={handleChange}
+          />
+        </div>
 
-        <textarea
-          name="ingredients"
-          placeholder="Ingredientes (uno por línea)"
-          value={formData.ingredients}
-          onChange={handleChange}
-        />
-        <br /><br />
+        <div className="form-group">
+          <textarea
+            className="textarea-field"
+            name="ingredients"
+            placeholder="Ingredientes (Escribe uno por línea)"
+            value={formData.ingredients}
+            onChange={handleChange}
+          />
+        </div>
 
-       <input
+        <div className="form-group">
+          <label className="section-label">Subir Imágenes:</label>
+          <input
+            className="file-input"
             type="file"
             accept="image/*"
             multiple
-            onChange={(e) =>
-                setFormData({ ...formData, images: Array.from(e.target.files) })
-            }
-        />
+            onChange={handleFileChange}
+          />
+          {filesToUpload.length > 0 && <small>{filesToUpload.length} archivos seleccionados.</small>}
+        </div>
 
-        <br /><br />
+        <div className="form-group">
+          <textarea
+            className="textarea-field"
+            name="recommendedPlaces"
+            placeholder="Lugares recomendados (Uno por línea)"
+            value={formData.recommendedPlaces}
+            onChange={handleChange}
+          />
+        </div>
 
-        <textarea
-          name="recommendedPlaces"
-          placeholder="Lugares recomendados (uno por línea)"
-          value={formData.recommendedPlaces}
-          onChange={handleChange}
-        />
-        <br /><br />
-
-        <button type="submit">
-          {editId ? "Actualizar" : "Guardar"}
+        <button type="submit" className="btn btn-primary">
+          {editId ? "Actualizar Platillo" : "Guardar Platillo"}
         </button>
 
-
         {editId && (
-          <button
-            type="button"
-            onClick={cancelEdit}
-            style={{ marginLeft: 10 }}
-          >
-            Cancelar edición
+          <button type="button" onClick={cancelEdit} className="btn btn-secondary">
+            Cancelar Edición
           </button>
         )}
       </form>
 
-{/* BUSCAR POR NOMBRE */}
-<div style={{ marginBottom: 40 }}>
-  <h2>Buscar por nombre</h2>
-
-  <input
-    type="text"
-    placeholder="Escribe el nombre del platillo"
-    value={searchName}
-    onChange={(e) => handleSearchByName(e.target.value)}
-    style={{ width: "300px" }}
-  />
-</div>
-
-
-      {/* LISTA */}
-      <h2>Lista de platillos</h2>
-<ul>
-  {filteredItems.map((item) => (
-    <li key={item._id} style={{ marginBottom: 20, border: "1px solid #ccc", padding: 10 }}>
-      <h3>{item.name}</h3>
-
-      <div><strong>Descripción:</strong> {item.description}</div>
-
-      <div>
-        <strong>Ingredientes:</strong>
-        <ul>
-          {item.ingredients?.map((ing, idx) => (
-            <li key={idx}>{ing}</li>
-          ))}
-        </ul>
+      {/* --- BUSCADOR --- */}
+      <div className="search-section">
+        <input
+          className="search-input"
+          type="text"
+          placeholder="🔍 Buscar platillo por nombre..."
+          value={searchName}
+          onChange={(e) => handleSearchByName(e.target.value)}
+        />
       </div>
 
-      <div>
-        <strong>Imágenes:</strong>
-        <ul>
-          {item.images?.map((img, idx) => (
-            <li key={idx}>
-              <a href={img} target="_blank">{img}</a>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {/* --- LISTADO (GRID) --- */}
+      <ul className="cards-grid">
+        {filteredItems.map((item) => (
+          <li key={item._id} className="gastronomy-card">
+            <div className="card-content">
+              <h3 className="card-title">{item.name}</h3>
+              
+              <div className="card-section">
+                <p>{item.description}</p>
+              </div>
 
-      <div>
-        <strong>Lugares recomendados:</strong>
-        <ul>
-          {item.recommendedPlaces?.map((place, idx) => (
-            <li key={idx}>{place}</li>
-          ))}
-        </ul>
-      </div>
+              <div className="card-section">
+                <span className="section-label">Ingredientes:</span>
+                <ul className="simple-list">
+                  {item.ingredients?.slice(0, 3).map((ing, idx) => (
+                    <li key={idx}>{ing}</li>
+                  ))}
+                  {item.ingredients?.length > 3 && <li>...</li>}
+                </ul>
+              </div>
 
-      <button onClick={() => startEdit(item)}>Editar</button>
-      <button onClick={() => handleDelete(item._id)}>Eliminar</button>
-    </li>
-  ))}
-</ul>
+              {item.images?.length > 0 && (
+                <div className="card-section">
+                  <span className="section-label">Galería:</span>
+                  <div className="image-gallery">
+                    {item.images.map((img, idx) => (
+                      <img key={idx} src={img} alt={item.name} className="card-img" />
+                    ))}
+                  </div>
+                </div>
+              )}
 
+              <div className="card-section">
+                <span className="section-label">Lugares:</span>
+                <ul className="simple-list">
+                    {item.recommendedPlaces?.map((place, idx) => (
+                        <li key={idx}>{place}</li>
+                    ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="card-actions">
+              <button onClick={() => startEdit(item)} className="btn btn-action btn-edit">
+                Editar
+              </button>
+              <button onClick={() => handleDelete(item._id)} className="btn btn-action btn-delete">
+                Eliminar
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
