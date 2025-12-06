@@ -16,7 +16,6 @@ app.use(cors({
   credentials: true
 }));
 
-
 const placeRoutes = require("./src/routes/touristPlace.routes");
 const historyRoutes = require("./src/routes/history.routes");
 const gastronomyRoutes = require("./src/routes/gastronomy.routes.js");
