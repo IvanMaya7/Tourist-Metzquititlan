@@ -1,20 +1,24 @@
 import { useEffect, useState } from "react";
-
+import axios from "axios"; // 1. Importante: Axios para subir a Cloudinary
 import {
     getTouristPlace,
     createTouristPlace,
     updateTouristPlace,
     deleteTouristPlace
 } from "../api/touristPlace";
+import "../styles/Gastronomy.css"; 
 
 function TouristPlaces() {
     const [items, setItems] = useState([]);
+    
+    // 2. Estado para los archivos seleccionados
+    const [filesToUpload, setFilesToUpload] = useState([]);
 
     const [formData, setFormData] = useState({
         name: "",
         description: "",
         location: "",
-        images: "",
+        images: [], // 3. Inicializamos como Array [], no string
         category: "otro",
         openHours: "",
         price: ""
@@ -23,6 +27,11 @@ function TouristPlaces() {
     const [editId, setEditId] = useState(null);
     const [searchName, setSearchName] = useState("");
     const [filteredItems, setFilteredItems] = useState([]);
+
+    // --- CONFIGURACIÓN CLOUDINARY ---
+    // Asegúrate de usar tus credenciales correctas
+    const CLOUDINARY_CLOUD_NAME = "duiwgaaxh"; 
+    const CLOUDINARY_UPLOAD_PRESET = "mo17q6fo"; // <--- Pega tu preset 'unsigned'
 
     const loadData = async () => {
         try {
@@ -45,13 +54,38 @@ function TouristPlaces() {
         });
     };
 
+    // 4. Manejador de selección de archivos
+    const handleFileChange = (e) => {
+        setFilesToUpload(Array.from(e.target.files));
+    };
+
+    // 5. Función de subida a Cloudinary
+    const uploadToCloudinary = async (file) => {
+        const data = new FormData();
+        data.append("file", file);
+        data.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+        data.append("cloud_name", CLOUDINARY_CLOUD_NAME);
+
+        try {
+            const response = await axios.post(
+                `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+                data
+            );
+            return response.data.secure_url;
+        } catch (error) {
+            console.error("Error subiendo imagen:", error);
+            throw error;
+        }
+    };
+
     const startEdit = (item) => {
         setEditId(item._id);
+        setFilesToUpload([]); // Limpiar archivos nuevos
         setFormData({
             name: item.name,
             description: item.description,
             location: item.location,
-            images: item.images.join("\n"),
+            images: item.images || [], // Mantener array existente
             category: item.category,
             openHours: item.openHours,
             price: item.price
@@ -60,11 +94,12 @@ function TouristPlaces() {
 
     const cancelEdit = () => {
         setEditId(null);
+        setFilesToUpload([]);
         setFormData({
             name: "",
             description: "",
             location: "",
-            images: "",
+            images: [],
             category: "otro",
             openHours: "",
             price: ""
@@ -73,15 +108,14 @@ function TouristPlaces() {
 
     const handleSearchByName = (value) => {
         setSearchName(value);
-
         const filtered = items.filter((item) =>
             item.name.toLowerCase().includes(value.toLowerCase())
         );
-
         setFilteredItems(filtered);
     };
 
     const handleDelete = async (id) => {
+        if(!window.confirm("¿Seguro que deseas eliminar este lugar?")) return;
         try {
             await deleteTouristPlace(id);
             alert("Lugar eliminado");
@@ -92,20 +126,30 @@ function TouristPlaces() {
         }
     };
 
+    // 6. HandleSubmit con lógica de subida
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const payload = {
-            name: formData.name,
-            description: formData.description,
-            location: formData.location,
-            images: formData.images.split("\n").filter(Boolean),
-            category: formData.category,
-            openHours: formData.openHours,
-            price: formData.price
-        };
-
         try {
+            let imageUrls = formData.images; // URLs existentes
+
+            // Subir archivos nuevos si los hay
+            if (filesToUpload.length > 0) {
+                const uploadPromises = filesToUpload.map(file => uploadToCloudinary(file));
+                const newUrls = await Promise.all(uploadPromises);
+                imageUrls = [...imageUrls, ...newUrls];
+            }
+
+            const payload = {
+                name: formData.name,
+                description: formData.description,
+                location: formData.location,
+                images: imageUrls, // Array final de URLs
+                category: formData.category,
+                openHours: formData.openHours,
+                price: formData.price
+            };
+
             if (editId) {
                 await updateTouristPlace(editId, payload);
                 alert("Lugar actualizado");
@@ -123,49 +167,59 @@ function TouristPlaces() {
     };
 
     return (
-        <div style={{ padding: 20 }}>
-            <h1>Lugares Turísticos</h1>
+        <div className="gastronomy-container">
+            <h1 className="title-main">Lugares Turísticos</h1>
 
             {/* FORM */}
-            <form onSubmit={handleSubmit} style={{ marginBottom: 30 }}>
+            <form onSubmit={handleSubmit} className="gastronomy-form">
                 <h2>{editId ? "Editar lugar" : "Agregar lugar"}</h2>
 
-                <input
-                    type="text"
-                    name="name"
-                    placeholder="Nombre"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                />
-                <br /><br />
+                <div className="form-group">
+                    <input
+                        className="input-field"
+                        type="text"
+                        name="name"
+                        placeholder="Nombre"
+                        value={formData.name}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
 
-                <textarea
-                    name="description"
-                    placeholder="Descripción"
-                    value={formData.description}
-                    onChange={handleChange}
-                    required
-                />
-                <br /><br />
+                <div className="form-group">
+                    <textarea
+                        className="input-field"
+                        name="description"
+                        placeholder="Descripción"
+                        value={formData.description}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
 
-                <input
-                    type="text"
-                    name="location"
-                    placeholder="Ubicación"
-                    value={formData.location}
-                    onChange={handleChange}
-                    required
-                />
-                <br /><br />
+                <div className="form-group">
+                    <input
+                        className="input-field"
+                        type="text"
+                        name="location"
+                        placeholder="Ubicación"
+                        value={formData.location}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
 
-                <textarea
-                    name="images"
-                    placeholder="URLs de imágenes (una por línea)"
-                    value={formData.images}
-                    onChange={handleChange}
-                />
-                <br /><br />
+                <div className="form-group">
+                    {/* Input de Archivos */}
+                    <label>Imágenes:</label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleFileChange}
+                    />
+                    {filesToUpload.length > 0 && <small> {filesToUpload.length} archivos seleccionados</small>}
+                </div>
 
                 <select
                     name="category"
@@ -179,27 +233,30 @@ function TouristPlaces() {
                     <option value="gastronomía">Gastronomía</option>
                     <option value="otro">Otro</option>
                 </select>
-                <br /><br />
 
-                <input
-                    type="text"
-                    name="openHours"
-                    placeholder="Horario"
-                    value={formData.openHours}
-                    onChange={handleChange}
-                />
-                <br /><br />
+                <div className="form-group">
+                    <input
+                        className="input-field"
+                        type="text"
+                        name="openHours"
+                        placeholder="Horario"
+                        value={formData.openHours}
+                        onChange={handleChange}
+                    />
+                </div>
 
-                <input
-                    type="text"
-                    name="price"
-                    placeholder="Precio"
-                    value={formData.price}
-                    onChange={handleChange}
-                />
-                <br /><br />
+                <div className="form-group">
+                    <input
+                        className="input-field"
+                        type="text"
+                        name="price"
+                        placeholder="Precio"
+                        value={formData.price}
+                        onChange={handleChange}
+                    />
+                </div>
 
-                <button type="submit">
+                <button type="submit" className="btn btn-primary">
                     {editId ? "Actualizar" : "Guardar"}
                 </button>
 
@@ -207,7 +264,7 @@ function TouristPlaces() {
                     <button
                         type="button"
                         onClick={cancelEdit}
-                        style={{ marginLeft: 10 }}
+                        className="btn btn-secondary"
                     >
                         Cancelar
                     </button>
@@ -215,57 +272,57 @@ function TouristPlaces() {
             </form>
 
             {/* SEARCH */}
-            <div style={{ marginBottom: 40 }}>
-                <h2>Buscar por nombre</h2>
-
+            <div className="search-section">
                 <input
                     type="text"
                     placeholder="Escribe el nombre del lugar"
                     value={searchName}
                     onChange={(e) => handleSearchByName(e.target.value)}
-                    style={{ width: "300px" }}
+                    className="search-input"
                 />
             </div>
 
             {/* LIST */}
-            <h2>Lista de lugares turísticos</h2>
-
-            <ul>
+            <ul className="cards-grid">
                 {filteredItems.map((item) => (
                     <li
                         key={item._id}
-                        style={{
-                            marginBottom: 20,
-                            border: "1px solid #ccc",
-                            padding: 10
-                        }}
+                        className="gastronomy-card"
                     >
-                        <h3>{item.name}</h3>
+                        <div className="card-content">
+                            <h3>{item.name}</h3>
 
-                        <div><strong>Descripción:</strong> {item.description}</div>
-                        <div><strong>Ubicación:</strong> {item.location}</div>
-                        <div><strong>Categoría:</strong> {item.category}</div>
-                        <div><strong>Horario:</strong> {item.openHours}</div>
-                        <div><strong>Precio:</strong> {item.price}</div>
+                            <div className="card-section"><strong>Descripción:</strong> {item.description}</div>
+                            <div className="card-section"><strong>Ubicación:</strong> {item.location}</div>
+                            <div className="card-section"><strong>Categoría:</strong> {item.category}</div>
+                            <div className="card-section"><strong>Horario:</strong> {item.openHours}</div>
+                            <div className="card-section"><strong>Precio:</strong> {item.price}</div>
 
-                        <div>
-                            <strong>Imágenes:</strong>
-                            <ul>
-                                {item.images?.map((img, idx) => (
-                                    <li key={idx}>
-                                        <a href={img} target="_blank" rel="noreferrer">{img}</a>
-                                    </li>
+                            <div className="card-section">
+                                <strong className="section-label">Imágenes:</strong>
+                                {/* Galería visual */}
+                                <div className="image-gallery">
+                                    {item.images?.map((img, idx) => (
+                                    <img 
+                                        key={idx} 
+                                        src={img} 
+                                        alt={item.name} 
+                                        className="card-img"
+                                    />
                                 ))}
-                            </ul>
+                                </div>
+                            </div>
                         </div>
 
-                        <button onClick={() => startEdit(item)}>Editar</button>
-                        <button
-                            onClick={() => handleDelete(item._id)}
-                            style={{ marginLeft: 10, color: "red" }}
-                        >
-                            Eliminar
-                        </button>
+                        <div className="card-actions">
+                            <button onClick={() => startEdit(item)} className="btn btn-action btn-edit">Editar</button>
+                            <button
+                                onClick={() => handleDelete(item._id)}
+                                className="btn btn-action btn-delete"
+                            >
+                                Eliminar
+                            </button>
+                        </div>
                     </li>
                 ))}
             </ul>

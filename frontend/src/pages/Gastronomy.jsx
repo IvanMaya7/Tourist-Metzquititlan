@@ -1,14 +1,10 @@
 import { useEffect, useState } from "react";
-<<<<<<< HEAD
-import { getGastronomy, createGastronomy, updateGastronomy, deleteGastronomy
-=======
 import axios from "axios";
 import {
   getGastronomy,
   createGastronomy,
   updateGastronomy,
   deleteGastronomy
->>>>>>> main
 } from "../api/gastronomy";
 
 // IMPORTANTE: Importar el CSS
@@ -30,13 +26,10 @@ function Gastronomy() {
   const [searchName, setSearchName] = useState("");
   const [filteredItems, setFilteredItems] = useState([]);
 
-<<<<<<< HEAD
-=======
   // TUS CREDENCIALES DE CLOUDINARY (Recuerda poner las tuyas)
-  const CLOUDINARY_CLOUD_NAME = "TU_CLOUD_NAME"; 
-  const CLOUDINARY_UPLOAD_PRESET = "TU_PRESET"; 
+  const CLOUDINARY_CLOUD_NAME = "duiwgaaxh"; 
+  const CLOUDINARY_UPLOAD_PRESET = "mo17q6fo"; 
 
->>>>>>> main
   const loadData = async () => {
     try {
       const res = await getGastronomy();
@@ -102,72 +95,6 @@ function Gastronomy() {
   };
 
   const handleSearchByName = (value) => {
-<<<<<<< HEAD
-  setSearchName(value);
-
-  const filtered = items.filter(item =>
-    item.name.toLowerCase().includes(value.toLowerCase())
-  );
-
-  setFilteredItems(filtered);
-  };
-
-  const handleDelete = async (id) => {
-  try {
-    await deleteGastronomy(id);
-    alert("Platillo eliminado correctamente");
-    loadData(); // vuelve a cargar la lista
-  } catch (error) {
-    console.error("Error eliminando:", error);
-    alert("Hubo un error al eliminar el platillo");
-  }
-};
-
-  const handleSubmit = async (e) => { 
-  e.preventDefault();
-
-  const formDataToSend = new FormData();
-
-  // Campos normales
-  formDataToSend.append("name", formData.name);
-  formDataToSend.append("description", formData.description);
-
-  // Convertimos los textos en arreglos reales
-  formDataToSend.append(
-    "ingredients",
-    JSON.stringify(formData.ingredients.split("\n").filter(Boolean))
-  );
-
-  formDataToSend.append(
-    "recommendedPlaces",
-    JSON.stringify(formData.recommendedPlaces.split("\n").filter(Boolean))
-  );
-
-  // IMÁGENES: si no hay imágenes, no enviamos nada
-  if (formData.images && formData.images.length > 0) {
-    formData.images.forEach((file) => {
-      formDataToSend.append("images", file);
-    });
-  }
-
-  try {
-    if (editId) {
-      await updateGastronomy(editId, formDataToSend);
-      alert("Platillo actualizado");
-    } else {
-      await createGastronomy(formDataToSend);
-      alert("Platillo guardado");
-    }
-
-    cancelEdit();
-    loadData();
-
-  } catch (error) {
-    console.error("Error guardando:", error);
-    alert("Error, revisa la consola");
-  }
-};
-=======
     setSearchName(value);
     const filtered = items.filter((item) =>
       item.name.toLowerCase().includes(value.toLowerCase())
@@ -215,8 +142,6 @@ function Gastronomy() {
       alert("Error al guardar. Revisa la consola.");
     }
   };
->>>>>>> main
-
 
   return (
     <div className="gastronomy-container">
