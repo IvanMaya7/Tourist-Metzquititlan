@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:3000/gastronomy"  // <<— SIN .env, directo
+  baseURL: "http://localhost:3000/gastronomy"
 });
 
 export const getGastronomy = () => 
