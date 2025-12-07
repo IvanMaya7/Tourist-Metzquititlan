@@ -142,10 +142,6 @@ function Gastronomy() {
       alert("Error al guardar. Revisa la consola.");
     }
   };
-<<<<<<< HEAD
-=======
-
->>>>>>> API_consumption
 
   return (
     <div className="gastronomy-container">
