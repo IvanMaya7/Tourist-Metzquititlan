@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Gastronomy from './pages/Gastronomy'; // Asegúrate de la ruta correcta
 import History from './pages/History';
 import TouristPlaces from './pages/TouristPlace';
+import Index from './pages/Index';
 import Sidebar from './components/Sidebar';
 
 function App() {
@@ -28,12 +29,13 @@ function App() {
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
       
       {/* 1. EL MENÚ LATERAL */}
+      {/*
       <Sidebar 
         activeView={currentView} 
         onChangeView={setCurrentView} 
       />
 
-      {/* 2. EL CONTENIDO PRINCIPAL */}
+      {/* 2. EL CONTENIDO PRINCIPAL 
       <div style={{ 
         flex: 1,           // Toma el resto del ancho
         marginLeft: '260px', // Deja espacio para el sidebar (mismo ancho que en CSS)
@@ -42,7 +44,8 @@ function App() {
       }}>
         {renderContent()}
       </div>
-
+      */}
+      <Index />
     </div>
   );
 }
