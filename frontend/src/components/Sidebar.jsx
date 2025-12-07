@@ -1,8 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../styles/Sidebar.css';
-
-// 1. Importamos los iconos que queremos usar
-// "Fa" viene de FontAwesome, pero puedes usar otros como "Md" (Material Design)
 import { 
   FaUtensils, 
   FaHistory, 
@@ -11,10 +8,10 @@ import {
   FaSignOutAlt 
 } from "react-icons/fa";
 
-function Sidebar({ onChangeView, activeView }) {
-  
-  // 2. Modificamos la estructura para separar el icono del texto
-  // En lugar de poner el emoji en el string, pasamos el componente del icono
+function Sidebar({ onChangeView, activeView, onLogout }) {
+
+  const [showModal, setShowModal] = useState(false);
+
   const menuItems = [
     { id: 'gastronomy', label: 'Gastronomía', icon: <FaUtensils /> },
     { id: 'history', label: 'Historia', icon: <FaHistory /> },
@@ -22,36 +19,70 @@ function Sidebar({ onChangeView, activeView }) {
   ];
 
   return (
-    <div className="sidebar">
-      <div className="sidebar-header">
-        {/* Usamos el icono Rocket aquí */}
-        <h2>Mi Admin <FaRocket style={{marginLeft: 10}} /></h2>
+    <>
+      <div className="sidebar">
+        <div className="sidebar-header">
+          <h2>Mi Admin <FaRocket style={{marginLeft: 10}} /></h2>
+        </div>
+
+        <nav className="sidebar-nav">
+          <ul>
+            {menuItems.map((item) => (
+              <li key={item.id}>
+                <button
+                  className={`sidebar-btn ${activeView === item.id ? 'active' : ''}`}
+                  onClick={() => onChangeView(item.id)}
+                >
+                  <span className="icon-wrapper">{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="sidebar-footer">
+          <button 
+            className="logout-btn"
+            onClick={() => setShowModal(true)}
+          >
+            <FaSignOutAlt style={{marginRight: 10}} /> 
+            Cerrar Sesión
+          </button>
+        </div>
       </div>
 
-      <nav className="sidebar-nav">
-        <ul>
-          {menuItems.map((item) => (
-            <li key={item.id}>
-              <button
-                className={`sidebar-btn ${activeView === item.id ? 'active' : ''}`}
-                onClick={() => onChangeView(item.id)}
+
+      {/* === MODAL === */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <h3>¿Cerrar sesión?</h3>
+            <p>¿Estás seguro de que deseas salir?</p>
+
+            <div className="modal-actions">
+              <button 
+                className="btn-cancel"
+                onClick={() => setShowModal(false)}
               >
-                {/* 3. Renderizamos el icono antes del texto */}
-                <span className="icon-wrapper">{item.icon}</span>
-                <span>{item.label}</span>
+                Cancelar
               </button>
-            </li>
-          ))}
-        </ul>
-      </nav>
 
-      <div className="sidebar-footer">
-        <button className="logout-btn">
-           {/* Icono de cerrar sesión */}
-          <FaSignOutAlt style={{marginRight: 10}} /> Cerrar Sesión
-        </button>
-      </div>
-    </div>
+              <button 
+                className="btn-confirm"
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  setShowModal(false);
+                  onLogout(); // ← REGRESA AL LOGIN
+                }}
+              >
+                Sí, cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
