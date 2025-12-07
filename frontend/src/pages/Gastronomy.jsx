@@ -27,8 +27,8 @@ function Gastronomy() {
   const [filteredItems, setFilteredItems] = useState([]);
 
   // TUS CREDENCIALES DE CLOUDINARY (Recuerda poner las tuyas)
-  const CLOUDINARY_CLOUD_NAME = "TU_CLOUD_NAME"; 
-  const CLOUDINARY_UPLOAD_PRESET = "TU_PRESET"; 
+  const CLOUDINARY_CLOUD_NAME = "duiwgaaxh"; 
+  const CLOUDINARY_UPLOAD_PRESET = "mo17q6fo"; 
 
   const loadData = async () => {
     try {
@@ -142,7 +142,6 @@ function Gastronomy() {
       alert("Error al guardar. Revisa la consola.");
     }
   };
-
 
   return (
     <div className="gastronomy-container">
