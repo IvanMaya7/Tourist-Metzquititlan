@@ -19,10 +19,14 @@ app.use(cors({
 const placeRoutes = require("./src/routes/touristPlace.routes");
 const historyRoutes = require("./src/routes/history.routes");
 const gastronomyRoutes = require("./src/routes/gastronomy.routes.js");
+const userRoutes = require("./src/routes/user.routes");
+const authRoute = require("./src/routes/auth.routes");
 
+app.use("/auth", authRoute);
 app.use("/touristPlace", placeRoutes);
 app.use("/history", historyRoutes);
 app.use("/gastronomy", gastronomyRoutes);
+app.use("/user", userRoutes);
 
 app.get("/", (req, res) => {
   res.send("¡Hola desde Express!");

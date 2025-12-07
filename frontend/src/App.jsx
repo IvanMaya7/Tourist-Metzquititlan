@@ -1,14 +1,32 @@
-import { useState } from 'react';
-import Gastronomy from './pages/Gastronomy'; // Asegúrate de la ruta correcta
+import { useState, useEffect } from 'react';
+import Gastronomy from './pages/Gastronomy';
 import History from './pages/History';
 import TouristPlaces from './pages/TouristPlace';
 import Sidebar from './components/Sidebar';
+import Login from './pages/Login';
 
 function App() {
-  // Estado para controlar qué vista se muestra
   const [currentView, setCurrentView] = useState('gastronomy');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Función para renderizar el contenido dinámicamente
+  // 🔍 Verificar token al cargar la app
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) setIsAuthenticated(true);
+  }, []);
+
+  // ✔ Login exitoso
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
+
+  // ✔ Logout desde el Sidebar
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // limpiar token
+    setIsAuthenticated(false);        // regresar al login
+  };
+
+  // 📌 Renderizado de vistas
   const renderContent = () => {
     switch (currentView) {
       case 'gastronomy':
@@ -18,31 +36,42 @@ function App() {
       case 'touristPlaces':
         return <TouristPlaces />;
       case 'users':
-        return <div style={{padding: 40}}><h1>👥 Gestión de Usuarios (Próximamente)</h1></div>;
+        return (
+          <div style={{ padding: 40 }}>
+            <h1>👥 Gestión de Usuarios (Próximamente)</h1>
+          </div>
+        );
       default:
         return <Gastronomy />;
     }
   };
 
+  // ⛔ Si NO está autenticado → mostrar Login
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // ✔ Si está autenticado → mostrar la app
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
       
-      {/* 1. EL MENÚ LATERAL */}
+      {/* Pasamos handleLogout al Sidebar */}
       <Sidebar 
         activeView={currentView} 
         onChangeView={setCurrentView} 
+        onLogout={handleLogout} 
       />
 
-      {/* 2. EL CONTENIDO PRINCIPAL */}
-      <div style={{ 
-        flex: 1,           // Toma el resto del ancho
-        marginLeft: '260px', // Deja espacio para el sidebar (mismo ancho que en CSS)
-        padding: '0',      // El padding ya lo tiene Gastronomy.css
-        overflowY: 'auto'  // Permite scroll si el contenido es largo
-      }}>
+      <div 
+        style={{
+          flex: 1,
+          marginLeft: '260px',
+          padding: '0',
+          overflowY: 'auto'
+        }}
+      >
         {renderContent()}
       </div>
-
     </div>
   );
 }
